@@ -31,39 +31,41 @@ export default function HomePage() {
     setRisk(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-
-        // 🔥 SEND STRINGS — NOT NUMBERS
-        body: JSON.stringify({
-          Age: data.age,
-          Sex: data.sex,                         // "M" or "F"
-          ChestPainType: data.chestPain,         // "ATA", "NAP", "TA", "ASY"
-          RestingBP: data.restingBP,
-          Cholesterol: data.cholesterol,
-          FastingBS: Number(data.fastingBS),     // 0 or 1
-          RestingECG: data.restingECG,           // "Normal", "ST", "LVH"
-          MaxHR: data.maxHR,
-          ExerciseAngina: data.exerciseAngina,   // "Y" or "N"
-          Oldpeak: data.oldpeak,
-          ST_Slope: data.stSlope                 // "Up", "Flat", "Down"
-        }),
-      });
-
-      const result = await response.json();
-      console.log("API RESULT:", result);
-
-      if (result.prediction !== undefined) {
-        setRisk(result.probability);
-      } else {
-        alert("API Error: " + result.error);
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-      alert("Cannot connect to backend. Is FastAPI running?");
+  const response = await fetch(
+    "https://heart-stroke-prediction-8old.onrender.com/predict", // ✅ Render backend
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        age: data.age,
+        sex: data.sex === "M" ? 1 : 0,
+        cp: ["ATA", "NAP", "TA", "ASY"].indexOf(data.chestPain),
+        trestbps: data.restingBP,
+        chol: data.cholesterol,
+        fbs: data.fastingBS === "1" ? 1 : 0,
+        restecg: ["Normal", "ST", "LVH"].indexOf(data.restingECG),
+        thalach: data.maxHR,
+        exang: data.exerciseAngina === "Y" ? 1 : 0,
+        oldpeak: data.oldpeak,
+        slope: ["Up", "Flat", "Down"].indexOf(data.stSlope),
+        ca: 0,
+        thal: 1,
+      }),
     }
+  );
 
+  const result = await response.json();
+  console.log("API RESULT:", result);
+
+  if (result.prediction !== undefined) {
+    setRisk(result.probability);
+  } else {
+    alert("API Error: " + result.error);
+  }
+} catch (error) {
+  console.error("Fetch error:", error);
+  alert("Cannot connect to backend.");
+}
     setIsLoading(false);
   };
 
