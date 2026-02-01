@@ -36,4 +36,5 @@ Result Display: Frontend shows the result in an interactive, clean UI.
 
 Here’s how the UI looks:
 
+![Stroke Prediction UI](assets/Screenshot%202026-02-02%20001739.png)
 
