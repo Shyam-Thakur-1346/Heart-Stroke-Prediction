@@ -31,41 +31,52 @@ export default function HomePage() {
     setRisk(null);
 
     try {
-  const response = await fetch(
-    "https://heart-stroke-prediction-8old.onrender.com/predict", // ✅ Render backend
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        age: data.age,
-        sex: data.sex === "M" ? 1 : 0,
-        cp: ["ATA", "NAP", "TA", "ASY"].indexOf(data.chestPain),
-        trestbps: data.restingBP,
-        chol: data.cholesterol,
-        fbs: data.fastingBS === "1" ? 1 : 0,
-        restecg: ["Normal", "ST", "LVH"].indexOf(data.restingECG),
-        thalach: data.maxHR,
-        exang: data.exerciseAngina === "Y" ? 1 : 0,
-        oldpeak: data.oldpeak,
-        slope: ["Up", "Flat", "Down"].indexOf(data.stSlope),
-        ca: 0,
-        thal: 1,
-      }),
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+  Age: Number(data.age),
+  Sex: data.sex,                     // STRING
+  ChestPainType: data.chestPain,     // STRING
+  RestingBP: Number(data.restingBP),
+  Cholesterol: Number(data.cholesterol),
+  FastingBS: Number(data.fastingBS),
+  RestingECG: data.restingECG,       // STRING
+  MaxHR: Number(data.maxHR),
+  ExerciseAngina: data.exerciseAngina, // STRING
+  Oldpeak: Number(data.oldpeak),
+  ST_Slope: data.stSlope,            // STRING
+}),
+
+      });
+
+      const result = await response.json();
+      console.log("API RESULT:", result);
+
+      // ❌ If backend returned error (422, 500, etc.)
+      if (!response.ok) {
+        alert("Backend Error: " + JSON.stringify(result));
+        setIsLoading(false);
+        return;
+      }
+
+      // ✅ If backend sends probability
+      if (result.probability !== undefined) {
+        setRisk(result.probability);
+      }
+      // ✅ If backend sends only prediction (0/1)
+      else if (result.prediction !== undefined) {
+        setRisk(result.prediction === 1 ? 0.85 : 0.15); // fallback estimate
+      }
+      // ❌ Unknown format
+      else {
+        alert("Unexpected API response: " + JSON.stringify(result));
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Cannot connect to backend. Make sure FastAPI is running.");
     }
-  );
 
-  const result = await response.json();
-  console.log("API RESULT:", result);
-
-  if (result.prediction !== undefined) {
-    setRisk(result.probability);
-  } else {
-    alert("API Error: " + result.error);
-  }
-} catch (error) {
-  console.error("Fetch error:", error);
-  alert("Cannot connect to backend.");
-}
     setIsLoading(false);
   };
 
